@@ -1,7 +1,8 @@
 import React from "react";
 import logo from "./logo.svg";
 import "./App.css";
-import axios, { AxiosError } from "axios"; // AxiosErrorをインポート
+import { Navbar } from "./components/Navbar/Navbar";
+import axios, { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 
 type PredictionData = {
@@ -37,11 +38,14 @@ function App() {
 
   if (error) {
     return (
+      <>
+      <Navbar />
       <div className="App">
         <h1>予測データ</h1>
         <p style={{ color: "red" }}>{error}</p>
         <button onClick={handleRefreshClick}>更新</button>
       </div>
+      </>
     );
   }
 
