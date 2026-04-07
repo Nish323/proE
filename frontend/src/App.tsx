@@ -1,9 +1,8 @@
-import React from "react";
-import logo from "./logo.svg";
 import "./App.css";
 import { Navbar } from "./components/Navbar/Navbar";
 import axios, { AxiosError } from "axios";
 import { useEffect, useState } from "react";
+import { Box } from "./components/Box/Box";
 
 type PredictionData = {
   prediction: string;
@@ -11,7 +10,10 @@ type PredictionData = {
 };
 
 function App() {
-  const [data, setData] = useState<PredictionData>({ prediction: "", timestamp: "" });
+  const [data, setData] = useState<PredictionData>({
+    prediction: "",
+    timestamp: "",
+  });
   const [error, setError] = useState<string | null>(null);
   const [refresh, setRefresh] = useState<boolean>(false);
 
@@ -22,7 +24,8 @@ function App() {
         setData(res.data);
         setError(null);
       })
-      .catch((err: AxiosError) => { // errの型をAxiosErrorに指定
+      .catch((err: AxiosError) => {
+        // errの型をAxiosErrorに指定
         console.error("Error fetching data:", err);
         setError(`データの取得に失敗しました: ${err.message}`);
       });
@@ -39,12 +42,18 @@ function App() {
   if (error) {
     return (
       <>
-      <Navbar />
-      <div className="App">
-        <h1>予測データ</h1>
-        <p style={{ color: "red" }}>{error}</p>
-        <button onClick={handleRefreshClick}>更新</button>
-      </div>
+        <Navbar />
+        <div className="App">
+          <h1>予測データ</h1>
+          <p style={{ color: "red" }}>{error}</p>
+          <button onClick={handleRefreshClick}>更新</button>
+          <div className="box-container">
+            <Box value={55} unit="%" label="ただいまの混雑度" />
+            <Box value={120} unit="人" label="ただいまの人数" />
+            <Box value="晴れ" label="ただいまの天気" />
+            <Box value="10:30" label="ただいまの時刻" />
+          </div>
+        </div>
       </>
     );
   }

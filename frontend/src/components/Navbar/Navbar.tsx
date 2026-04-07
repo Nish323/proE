@@ -1,4 +1,3 @@
-import React from "react";
 import "./Navbar.css";
 import axios, { AxiosError } from "axios";
 import { useState, useEffect } from "react";
