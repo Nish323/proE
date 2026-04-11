@@ -5,6 +5,7 @@ import axios, { AxiosError } from "axios"; // AxiosErrorをインポート
 import { useEffect, useState } from "react";
 import { Navbar } from "./components/Navbar/Navbar";
 import { Box } from "./components/Box/Box";
+import { Footer } from "./components/Footer/Footer";
 
 type PredictionData = {
   prediction: string;
@@ -42,7 +43,7 @@ function App() {
   };
 
   return (
-    <>
+    <div className="App-container">
       <Navbar onRefreshClick={handleRefreshClick} />
       <div className="App">
         <h1>予測データ</h1>
@@ -67,7 +68,8 @@ function App() {
           <Box value="10:30" label="ただいまの時刻" />
         </div>
       </div>
-    </>
+      <Footer timestamp={data.timestamp} />
+    </div>
   );
 }
 

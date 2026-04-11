@@ -1,6 +1,12 @@
+.App-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
 .App {
   text-align: center;
-  flex: auto;
+  flex: 1;
 }
 
 .box-container {
