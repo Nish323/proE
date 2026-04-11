@@ -10,8 +10,11 @@ export function Navbar({ onRefreshClick }: NavbarProps) {
   return (
     <nav className="navbar">
       <div className="navbar-logo">
-        <div className="navbar-main-logo">PALTO-AI</div>
-        <div className="navbar-sub-logo">crowd view</div>
+        <img 
+          src="/logo.png" 
+          alt="PALTO-AI Logo" 
+          className="logo"
+        />
       </div>
       <button onClick={onRefreshClick} className="navbar-button">
         <RefreshCcw className="navbar-button-icon" />
