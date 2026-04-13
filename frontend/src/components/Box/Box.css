@@ -1,0 +1,76 @@
+body {
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  background-color: #f5f7f8;
+  font-family:
+    "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans",
+    sans-serif;
+}
+
+.status-card {
+  width: 200px;
+  height: 250px;
+  border-radius: 24px;
+  overflow: hidden; /* カーブがはみ出さないように */
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  background-color: #383431; /* 上部の暗い色 */
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* 上部：数字部分 */
+.status-top {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #ffffff;
+  padding-bottom: 20px; /* カーブに食い込む分、少し下を空ける */
+}
+
+.percentage {
+  font-size: 50px;
+  font-weight: 800;
+  letter-spacing: -2px;
+}
+
+.unit {
+  font-size: 32px;
+  margin-left: 4px;
+  font-weight: 700;
+}
+
+/* 下部：ラベル部分 */
+.status-bottom {
+  height: 100px;
+  background-color: #f0f0f0; /* 下部の明るい色 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+/* 境界線のカーブを作る擬似要素 */
+.status-bottom::before {
+  content: "";
+  position: absolute;
+  top: -15px; /* 上に突き出す */
+  left: -10%;
+  width: 120%;
+  height: 60px;
+  background-color: #f0f0f0; /* 下部と同じ色にする */
+  border-radius: 50% 50% 0 0; /* 楕円の上の部分だけ丸める */
+}
+
+/* テキスト（カーブより上に表示するため z-index を指定） */
+.label {
+  position: relative;
+  z-index: 1;
+  color: #383431;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
