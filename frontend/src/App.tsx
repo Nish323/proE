@@ -1,7 +1,6 @@
 import React from "react";
-// import logo from "./logo.svg";
 import "./App.css";
-import axios, { AxiosError } from "axios"; // AxiosErrorをインポート
+import axios, { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 import { Navbar } from "./components/Navbar/Navbar";
 import { Box } from "./components/Box/Box";

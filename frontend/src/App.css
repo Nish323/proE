@@ -7,6 +7,7 @@
 .App {
   text-align: center;
   flex: 1;
+  margin-top: 10px;
 }
 
 .box-container {
