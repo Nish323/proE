@@ -1,3 +1,4 @@
+import { useState } from "react";
 import "./Navbar.css";
 import { RefreshCcw } from "lucide-react";
 
@@ -7,17 +8,25 @@ type NavbarProps = {
 };
 
 export function Navbar({ onRefreshClick }: NavbarProps) {
+  const [isRotating, setIsRotating] = useState(false);
+
+  const handleButtonClick = () => {
+    setIsRotating(true);
+    onRefreshClick();
+    setTimeout(() => {
+      setIsRotating(false);
+    }, 600);
+  };
+
   return (
     <nav className="navbar">
       <div className="navbar-logo">
-        <img 
-          src="/logo.png" 
-          alt="PALTO-AI Logo" 
-          className="logo"
-        />
+        <img src="/logo.png" alt="PALTO-AI Logo" className="logo" />
       </div>
-      <button onClick={onRefreshClick} className="navbar-button">
-        <RefreshCcw className="navbar-button-icon" />
+      <button onClick={handleButtonClick} className="navbar-button">
+        <RefreshCcw
+          className={`navbar-button-icon ${isRotating ? "rotating" : ""}`}
+        />
         <p className="navbar-button-text">Update</p>
       </button>
     </nav>

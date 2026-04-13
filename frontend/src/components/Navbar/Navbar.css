@@ -39,6 +39,20 @@
   color: #333;
 }
 
+/* 回転アニメーションのキーフレーム */
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.rotating {
+  animation: rotate 0.6s linear;
+}
+
 .navbar-button-text {
   margin-left: 0.5rem;
   color: white;
