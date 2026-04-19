@@ -2,6 +2,9 @@ from flask import Flask, jsonify, request
 import mysql.connector
 import json
 
+# 文字列をdatetime型に変換するために使う
+from datetime import datetime
+
 app = Flask(__name__)
 
 # MySQLに接続してコネクションを返す関数
@@ -23,80 +26,64 @@ def insert():
 
     # リクエストのJSONを取り出す
     data = request.get_json()
+
+    # ↓ 追加: JSONが読み取れなかった場合のチェック
+    if data is None:
+        return jsonify({"error": "Invalid JSON"}), 400
+
     print(f"[insert] 受け取ったデータ: {data}")
 
-    # JSONから各フィールドを取り出す
-    sensor_id         = data["sensor_id"]
-    sequence_no       = data["sequence_no"]
-    scan_duration_sec = data["scan_duration_sec"]
-    scanned_at_str    = data["scanned_at"]
-    observations      = data["observations"]
+    # ↓ 追加: 必須フィールドが全て揃っているかチェック
+    required_fields = ["sensor_id", "sequence_no", "scanned_at", "observations"]
+    for field in required_fields:
+        if field not in data:
+            return jsonify({"error": f"Missing field: {field}"}), 400
 
-    # 丸岡変更点: observationsはリスト形式なのでJSON文字列に変換してDBに入れられる形にする
-    other_data_json = json.dumps(observations)
-    print(f"[insert] other_data_json: {other_data_json}")
+    # 各フィールドを明示的に型変換して取り出す
+    sensor_id   = str(data["sensor_id"])
+    sequence_no = int(data["sequence_no"])
 
-    # 丸岡変更点: DBに接続する
-    conn   = get_db_connection()
-    cursor = conn.cursor()
-    print("[insert] カーソル取得完了")
+    # ISO 8601形式の文字列をdatetime型に変換する（例: "2025-01-01T12:00:00+09:00"）
+    # ↓ 追加: 変換失敗した場合のチェック
+    try:
+        timestamp = datetime.fromisoformat(data["scanned_at"])
+    except ValueError:
+        return jsonify({"error": f"Invalid scanned_at format: {data['scanned_at']}"}), 400
 
-    # 丸岡変更点: INSERT文を定義して実行する（%sはSQL用のプレースホルダ）
-    sql = """
-        INSERT INTO ble_data (sensor_id, sequence_no, scanned_at, scan_duration_sec, other_data)
-        VALUES (%s, %s, %s, %s, %s)
-    """
-    cursor.execute(sql, (sensor_id, sequence_no, scanned_at_str, scan_duration_sec, other_data_json))
-    print("[insert] INSERT実行完了")
+    # JSON全文をそのまま文字列化してDBに入れる（scan_duration_secも含まれる）
+    other_data_json = json.dumps(data)
 
-    # 丸岡変更点: コミットしないとDBに反映されないので必ず呼ぶ
-    conn.commit()
-    print("[insert] コミット完了")
+    # ↓ 追加: DB操作全体をtry/except/finallyで囲む
+    try:
+        conn   = get_db_connection()
+        cursor = conn.cursor()
+        print("[insert] カーソル取得完了")
 
-    # 丸岡変更点: リソースを解放する
-    cursor.close()
-    conn.close()
+        # カラム名をDBのスキーマに合わせたINSERT文（%sはSQL用のプレースホルダ）
+        sql = """
+            INSERT INTO ble_data (timestamp, sensor_id, sequence_no, other_data)
+            VALUES (%s, %s, %s, %s)
+        """
+        cursor.execute(sql, (timestamp, sensor_id, sequence_no, other_data_json))
+        print("[insert] INSERT実行完了")
 
-    # 丸岡変更点: 論文のAPI2レスポンス例に合わせた形で返す
-    return jsonify({"message": "Data inserted successfully"}), 200
+        # コミットしないとDBに反映されないので必ず呼ぶ
+        conn.commit()
+        print("[insert] コミット完了")
 
+    # ↓ 追加: DBエラーが起きた場合にクラッシュせずエラーメッセージを返す
+    except mysql.connector.Error as e:
+        print(f"[insert] DBエラー: {e}")
+        return jsonify({"error": "Database error", "detail": str(e)}), 500
 
-@app.route('/prediction', methods=['GET'])
-def get_prediction():
-    print("[prediction] リクエストを受け取りました")
+    # ↓ 追加: 成功・失敗どちらの場合も必ずDB接続を閉じる
+    finally:
+        cursor.close()
+        conn.close()
 
-    # 丸岡変更点: Buffer.jsonではなくDBから取得するように変更
-    conn   = get_db_connection()
-    cursor = conn.cursor()
-
-    # 丸岡変更点: predictionsテーブルから最新3件を取得するSQL
-    sql = """
-        SELECT prediction_waittime_min, predicted_at
-        FROM predictions
-        ORDER BY predicted_at DESC
-        LIMIT 3
-    """
-    cursor.execute(sql)
-    print("[prediction] SELECT実行完了")
-
-    # 丸岡変更点: 最新3件取得（最大3件、結果がなければ空リストになる）
-    rows = cursor.fetchall()
-    print(f"[prediction] 取得結果: {rows}")
-
-    cursor.close()
-    conn.close()
-
-    # 丸岡変更点: データがなければ404を返す
-    if not rows:
-        return jsonify({"error": "No prediction available"}), 404
-
-    # 丸岡変更点: 各行を辞書に変換してリストで返す
-    result = [
-        {"prediction": row[0], "timestamp": str(row[1])}
-        for row in rows
-    ]
-    return jsonify(result), 200
-
+    # 論文のAPI2レスポンス例に合わせた形で返す
+    # return jsonify({"message": "Data inserted successfully"}), 200
 
 if __name__ == '__main__':
+    app.use_reloader = False
     app.run(debug=True)
