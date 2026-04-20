@@ -40,7 +40,7 @@ def insert():
             return jsonify({"error": f"Missing field: {field}"}), 400
 
     # 各フィールドを明示的に型変換して取り出す
-    sensor_id   = str(data["sensor_id"])
+    sensor_id   = int(data["sensor_id"])
     sequence_no = int(data["sequence_no"])
 
     # ISO 8601形式の文字列をdatetime型に変換する（例: "2025-01-01T12:00:00+09:00"）
