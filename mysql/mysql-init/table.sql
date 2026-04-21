@@ -1,18 +1,21 @@
--- ble_dataテーブル（昨年度から追加・変更）
+-- ble_dataテーブル
 CREATE TABLE IF NOT EXISTS ble_data (
-    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id          BIGINT      AUTO_INCREMENT PRIMARY KEY,
     timestamp   DATETIME(3) NOT NULL,
-    sensor_id   VARCHAR(64) NOT NULL,      -- 追加
-    sequence_no INT         NOT NULL,      -- 追加
+    sensor_id   VARCHAR(64) NOT NULL,
+    sequence_no INT         NOT NULL,
     other_data  JSON        NOT NULL
 );
 
 CREATE UNIQUE INDEX uq_ble_data_sensor_seq
-ON ble_data(sensor_id, sequence_no);      -- 追加
+ON ble_data(sensor_id, sequence_no);
 
--- predictionsテーブル（新規）
+CREATE INDEX idx_ble_data_timestamp
+ON ble_data(timestamp);
+
+-- predictionsテーブル
 CREATE TABLE IF NOT EXISTS predictions (
-    id                      BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id                      BIGINT      AUTO_INCREMENT PRIMARY KEY,
     window_start            DATETIME(3) NOT NULL,
     window_end              DATETIME(3) NOT NULL,
     prediction_waittime_min FLOAT       NOT NULL,
@@ -22,3 +25,6 @@ CREATE TABLE IF NOT EXISTS predictions (
 
 CREATE UNIQUE INDEX uq_predictions_window_model
 ON predictions(window_start, window_end, model_version);
+
+CREATE INDEX idx_predictions_predicted_at
+ON predictions(predicted_at);
