@@ -16,15 +16,10 @@ ON ble_data(timestamp);
 -- predictionsテーブル
 CREATE TABLE IF NOT EXISTS predictions (
     id                      BIGINT      AUTO_INCREMENT PRIMARY KEY,
-    window_start            DATETIME(3) NOT NULL,
-    window_end              DATETIME(3) NOT NULL,
     prediction_waittime_min FLOAT       NOT NULL,
     predicted_at            DATETIME(3) NOT NULL,
     model_version           VARCHAR(64) NOT NULL
 );
-
-CREATE UNIQUE INDEX uq_predictions_window_model
-ON predictions(window_start, window_end, model_version);
 
 CREATE INDEX idx_predictions_predicted_at
 ON predictions(predicted_at);
