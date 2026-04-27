@@ -1,11 +1,11 @@
 # src/main.py
 
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 import mysql.connector
 
-from config import WINDOW_SECONDS
-from database import get_db_connection, fetch_recent_ble_data, save_prediction
+# window_start/endを使わなくなったので、timedelta や WINDOW_SECONDS のインポートは削除しました
+from database import get_db_connection, fetch_latest_ble_data, save_prediction
 from weather import get_current_weather
 from features import calculate_all_features
 from predictor import WaitTimePredictor
@@ -18,17 +18,14 @@ def run_inference_cycle(predictor):
     cursor = None
     
     try:
-        # 現在時刻を基準に、直近 WINDOW_SECONDS 秒間のデータを対象にする
         now = datetime.now()
-        window_end = now
-        window_start = now - timedelta(seconds=WINDOW_SECONDS)
         
         # 1. DB接続
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
         
-        # 2. BLE生データの取得
-        ble_records = fetch_recent_ble_data(cursor, window_start, window_end)
+        # 2. BLE生データの取得（最新3件を取得）
+        ble_records = fetch_latest_ble_data(cursor, limit=3)
         
         # 3. 天気情報の取得
         weather_info = get_current_weather()
@@ -40,10 +37,10 @@ def run_inference_cycle(predictor):
             # 5. 推論実行
             predicted_time = predictor.predict(features_dict)
             
-            # 6. 予測結果をDBに保存
-            save_prediction(connection, cursor, window_start, window_end, predicted_time)
+            # 6. 予測結果をDBに保存（windowの時間は渡さない）
+            save_prediction(connection, cursor, predicted_time)
         else:
-            print(f"[{now.strftime('%H:%M:%S')}] 対象期間にBLEデータがありません。スキップします。")
+            print(f"[{now.strftime('%H:%M:%S')}] DBにBLEデータがありません。スキップします。")
 
     except mysql.connector.Error as err:
         print(f"データベースエラー: {err}")
@@ -68,8 +65,7 @@ def main():
     while True:
         run_inference_cycle(predictor)
         
-        # 次のサイクルまで待機
-        # ※処理時間を考慮せず、単純に60秒待機する設計
+        # 次のサイクルまで待機 (1分間隔)
         time.sleep(60)
 
 if __name__ == "__main__":
