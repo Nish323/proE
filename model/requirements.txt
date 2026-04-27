@@ -1,1 +1,5 @@
 mysql-connector-python == 9.1.0
+requests
+catboost
+pandas
+scikit-learn
