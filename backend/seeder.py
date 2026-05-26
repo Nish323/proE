@@ -19,8 +19,8 @@ from datetime import datetime, timedelta
 # 接続設定（docker-compose.yml に合わせる）
 # ========================================
 DB_CONFIG = {
-    "host":     "127.0.0.1",   # ホストから実行する場合は 127.0.0.1
-    "port":     3307,           # docker-compose で 3307:3306 にマッピング済み
+    "host":     "mysql",   # 変更: "127.0.0.1" → "mysql"
+    "port":     3306,      # 変更: 3307 → 3306
     "user":     "project-e",
     "password": "project-e",
     "database": "ble_db",

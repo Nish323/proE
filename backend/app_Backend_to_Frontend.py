@@ -1,9 +1,11 @@
 from flask import Flask, jsonify
+from flask_cors import CORS
 import mysql.connector
 from datetime import datetime
 from typing import Dict, Any, Tuple
 
 app = Flask(__name__)
+CORS(app)
 
 # MySQLに接続してコネクションを返す関数
 def get_db_connection():
@@ -48,7 +50,8 @@ def prediction() -> Tuple[Dict[str, Any], int]:
             # 取得したデータをFrontendに返す
             response_data: Dict[str, Any] = {
                 "prediction": result['prediction_waittime_min'],
-                "timestamp": str(result['predicted_at'].isoformat())
+                "timestamp": str(result['predicted_at'].isoformat()),
+                "weather": "晴れ"
             }
             print(f"[prediction] レスポンス返却: {response_data}")
             return jsonify(response_data), 200
