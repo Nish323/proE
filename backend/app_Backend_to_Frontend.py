@@ -32,9 +32,9 @@ def prediction() -> Tuple[Dict[str, Any], int]:
         # ORDER BY created_at DESC で時刻が新しい順に並べ替え
         # LIMIT 1 で上から1行だけ取得
         sql = """
-            SELECT created_at, predicted_value
-            FROM predict_results
-            ORDER BY created_at DESC
+            SELECT prediction_waittime_min, predicted_at
+            FROM predictions
+            ORDER BY predicted_at DESC
             LIMIT 1
         """
 
@@ -47,8 +47,8 @@ def prediction() -> Tuple[Dict[str, Any], int]:
             
             # 取得したデータをFrontendに返す
             response_data: Dict[str, Any] = {
-                "prediction": int(result['predicted_value']),
-                "timestamp": str(result['created_at'].isoformat())
+                "prediction": result['prediction_waittime_min'],
+                "timestamp": str(result['predicted_at'].isoformat())
             }
             print(f"[prediction] レスポンス返却: {response_data}")
             return jsonify(response_data), 200
