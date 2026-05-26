@@ -1,9 +1,11 @@
 from flask import Flask, jsonify
+from flask_cors import CORS
 import mysql.connector
 from datetime import datetime
 from typing import Dict, Any, Tuple
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": ["http://localhost:3000"]}})
 
 # MySQLに接続してコネクションを返す関数
 def get_db_connection():
