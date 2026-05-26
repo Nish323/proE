@@ -10,6 +10,7 @@ import { CurrentTime } from "./components/CurrentTime/CurrentTime";
 type PredictionData = {
   prediction: number;
   timestamp: string;
+  weather: string;
 };
 
 function App() {
@@ -55,6 +56,7 @@ function App() {
         ) : data ? (
           <div className="box-container">
             <Box value={data.prediction.toFixed(1)} unit="分" label="ただいまの予測待ち時間" />
+            <Box value={data.weather} label="天気" />
             <Footer timestamp={data.timestamp} />
           </div>
         ) : (

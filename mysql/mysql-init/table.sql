@@ -18,7 +18,8 @@ CREATE TABLE IF NOT EXISTS predictions (
     id                      BIGINT      AUTO_INCREMENT PRIMARY KEY,
     prediction_waittime_min FLOAT       NOT NULL,
     predicted_at            DATETIME(3) NOT NULL,
-    model_version           VARCHAR(64) NOT NULL
+    model_version           VARCHAR(64) NOT NULL,
+    weather                 VARCHAR(32) DEFAULT '晴れ'
 );
 
 CREATE INDEX idx_predictions_predicted_at
