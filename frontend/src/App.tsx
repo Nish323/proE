@@ -8,17 +8,15 @@ import { Footer } from "./components/Footer/Footer";
 import { CurrentTime } from "./components/CurrentTime/CurrentTime";
 
 type PredictionData = {
-  prediction: string;
+  prediction: number;
   timestamp: string;
 };
 
 function App() {
-  const [data, setData] = useState<PredictionData>({
-    prediction: "",
-    timestamp: "",
-  });
+  const [data, setData] = useState<PredictionData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refresh, setRefresh] = useState<boolean>(false);
+  const [lastFetchMessage, setLastFetchMessage] = useState<string>("");
 
   const fetchData = () => {
     axios
@@ -26,29 +24,23 @@ function App() {
       .then((res) => {
         setData(res.data);
         setError(null);
+        setLastFetchMessage(`成功 (${new Date().toLocaleTimeString()})`);
       })
       .catch((err: AxiosError) => {
-        // errの型をAxiosErrorに指定
         console.error("Error fetching data:", err);
         setError(`データの取得に失敗しました: ${err.message}`);
+        setLastFetchMessage(`失敗: ${err.message}`);
       });
   };
 
   useEffect(() => {
     fetchData();
+    const intervalId = setInterval(fetchData, 60000);
+    return () => clearInterval(intervalId);
   }, [refresh]);
 
   const handleRefreshClick = () => {
     setRefresh((prev) => !prev);
-  };
-
-  // errorをないことにする
-  error && setError(null);
-
-  // 仮データ
-  const mockData: PredictionData = {
-    prediction: "混雑度は高めです",
-    timestamp: "11:58",
   };
 
   return (
@@ -60,16 +52,15 @@ function App() {
         <h1>予測データ</h1>
         {error ? (
           <p style={{ color: "red" }}>{error}</p>
-        ) : mockData.prediction ? ( // data自体ではなく、data.predictionの存在をチェック
+        ) : data ? (
           <div className="box-container">
-            <Box value={10} unit="分" label="ただいまの予測待ち時間" />
-            <Box value="晴れ" label="ただいまの天気" />
+            <Box value={data.prediction.toFixed(1)} unit="分" label="ただいまの予測待ち時間" />
+            <Footer timestamp={data.timestamp} />
           </div>
         ) : (
           <p>データを読み込み中...</p>
         )}
       </div>
-      <Footer timestamp={mockData.timestamp} />
     </div>
   );
 }

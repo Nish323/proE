@@ -5,7 +5,8 @@ from datetime import datetime
 from typing import Dict, Any, Tuple
 
 app = Flask(__name__)
-CORS(app)
+
+CORS(app, resources={r"/*": {"origins": ["http://localhost:3000"]}})
 
 # MySQLに接続してコネクションを返す関数
 def get_db_connection():
