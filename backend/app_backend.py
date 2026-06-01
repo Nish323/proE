@@ -28,11 +28,11 @@ def get_db_connection():
 # ラズパイからBLEデータを受け取るエンドポイント
 # POST /insert
 # -----------------------------------------------
-@app.route("/insert", methods=["POST"])
-def insert():
-    print("[insert] リクエストを受け取りました")
+@app.route("/upload_txt", methods=["POST"])
+def upload_txt():
+    print("[upload_txt] リクエストを受け取りました")
 
-    data = request.get_json()
+    data = request.get_data(as_text=True)
     if data is None:
         return jsonify({"error": "Invalid JSON"}), 400
 
