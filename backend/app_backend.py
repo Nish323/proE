@@ -32,52 +32,76 @@ def get_db_connection():
 def upload_txt():
     print("[upload_txt] リクエストを受け取りました")
 
-    data = request.get_data(as_text=True)
-    if data is None:
-        return jsonify({"error": "Invalid JSON"}), 400
-
-    required_fields = ["sensor_id", "sequence_no", "scanned_at", "observations"]
-    for field in required_fields:
-        if field not in data:
-            return jsonify({"error": f"Missing field: {field}"}), 400
-
-    try:
-        sensor_id = int(data["sensor_id"])
-    except (ValueError, TypeError):
-        return jsonify({"error": f"Invalid sensor_id: {data['sensor_id']}"}), 400
-
-    sequence_no = int(data["sequence_no"])
-
-    try:
-        timestamp = datetime.fromisoformat(data["scanned_at"])
-    except ValueError:
-        return jsonify({"error": f"Invalid scanned_at format: {data['scanned_at']}"}), 400
-
-    other_data_json = json.dumps(data)
-
     conn = None
     cursor = None
+
     try:
+        # multipart/form-dataから取得
+        file = request.files["file"]
+        sensor_id = request.form["device_id"]
+
+        # txt内容を文字列として取得
+        text_data = file.read().decode("utf-8")
+
+        print(f"sensor_id={sensor_id}")
+        print(text_data)
+
+        # JSON化
+        other_data = {
+            "filename": file.filename,
+            "content": text_data
+        }
+
+        # Scan Time を抽出
+        timestamp = datetime.now()
+
+        for line in text_data.splitlines():
+            if line.startswith("Scan Time:"):
+                timestamp_str = line.replace("Scan Time:", "").strip()
+
+                timestamp = datetime.strptime(
+                    timestamp_str,
+                    "%Y-%m-%d %H:%M:%S"
+                )
+                break
+
         conn = get_db_connection()
         cursor = conn.cursor()
+
         sql = """
-            INSERT INTO ble_data (timestamp, sensor_id, sequence_no, other_data)
-            VALUES (%s, %s, %s, %s)
+        INSERT INTO ble_data
+        (timestamp, sensor_id, other_data)
+        VALUES (%s, %s, %s)
         """
-        cursor.execute(sql, (timestamp, sensor_id, sequence_no, other_data_json))
+
+        cursor.execute(
+            sql,
+            (
+                timestamp,
+                sensor_id,
+                json.dumps(other_data, ensure_ascii=False)
+            )
+        )
+
         conn.commit()
-        return jsonify({"message": "Data inserted successfully"}), 201
 
-    except mysql.connector.errors.IntegrityError:
-        return jsonify({"error": "Duplicate entry"}), 409
+        return jsonify({
+            "message": "TXT uploaded successfully"
+        }), 201
 
-    except mysql.connector.Error as e:
-        return jsonify({"error": "Database error", "detail": str(e)}), 500
+    except Exception as e:
+        print(e)
+
+        return jsonify({
+            "error": str(e)
+        }), 500
 
     finally:
-        if cursor: cursor.close()
-        if conn: conn.close()
+        if cursor:
+            cursor.close()
 
+        if conn:
+            conn.close()
 
 # -----------------------------------------------
 # フロントエンドへ予測結果を返すエンドポイント
