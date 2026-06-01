@@ -21,7 +21,7 @@ services:
     volumes:
       - shared_data:/app/shared
     ports:
-      - "5001:80"
+      - "8888:80"
     networks:
       - db_model
 
