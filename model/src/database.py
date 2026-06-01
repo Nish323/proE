@@ -17,16 +17,36 @@ def get_db_connection():
 
 def fetch_latest_ble_data(cursor, limit=3):
     """
-    最新のBLE生データを指定件数（デフォルト3件）取得する
-    戻り値: 辞書型のリスト (例: [{'timestamp': ..., 'sensor_id': ..., 'other_data': ...}, ...])
+    sensor_idごとに最新limit件を取得する
+
+    戻り値:
+    [
+        {
+            'timestamp': ...,
+            'sensor_id': 'raspi01',
+            'other_data': ...
+        },
+        ...
+    ]
     """
-    # ORDER BY で時刻が新しい順に並べ替え、LIMIT で上から3件だけ取得する
+
     query = """
-        SELECT timestamp, sensor_id, other_data 
-        FROM ble_data 
-        ORDER BY timestamp DESC
-        LIMIT %s
+        SELECT timestamp, sensor_id, other_data
+        FROM (
+            SELECT
+                timestamp,
+                sensor_id,
+                other_data,
+                ROW_NUMBER() OVER (
+                    PARTITION BY sensor_id
+                    ORDER BY timestamp DESC
+                ) AS rn
+            FROM ble_data
+        ) ranked
+        WHERE rn <= %s
+        ORDER BY sensor_id, timestamp DESC
     """
+
     cursor.execute(query, (limit,))
     return cursor.fetchall()
 

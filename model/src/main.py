@@ -65,8 +65,8 @@ def main():
     while True:
         run_inference_cycle(predictor)
         
-        # 次のサイクルまで待機 (1分間隔)
-        time.sleep(60)
+        # 次のサイクルまで待機 (20秒間隔)
+        time.sleep(20)
 
 if __name__ == "__main__":
     main()
