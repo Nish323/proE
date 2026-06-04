@@ -108,8 +108,8 @@ def calculate_all_features(db_records, weather_info, target_time):
     })
     
     # ② DBレコードからJSONを解読し、デバイスごとにデータを振り分ける
-    # 構造: {'raspi01': [{'mac': '...', 'rssi': -75}, ...], 'raspi02': [...]}
-    device_observations = {device: [] for device in RASPI_DEVICES}
+    device_observations = {device: [] for device in RASPI_DEVICES} # 既存の18特徴量計算用（平坦リスト）
+    device_scan_sets = {device: [] for device in RASPI_DEVICES}    # 今回の積集合計算用（レコードごとの集合リスト）
     
     for record in db_records:
         sensor_id = record['sensor_id']
@@ -117,7 +117,6 @@ def calculate_all_features(db_records, weather_info, target_time):
             continue
             
         try:
-            # other_data は文字列として保存されている場合と、辞書型にパース済みの場合がある
             other_data = record['other_data']
             if isinstance(other_data, str):
                 data_dict = json.loads(other_data)
@@ -125,29 +124,57 @@ def calculate_all_features(db_records, weather_info, target_time):
                 data_dict = other_data
                 
             obs_list = data_dict.get('observations', [])
+            
+            # 従来の特徴量計算用に全データを平坦に結合
             device_observations[sensor_id].extend(obs_list)
+            
+            # 【追加】この1レコード（1回の計測）に含まれるMACアドレスだけの集合を作る
+            current_scan_macs = set()
+            for obs in obs_list:
+                mac = obs.get('mac_address', obs.get('mac', ''))
+                if mac:
+                    current_scan_macs.add(mac)
+            
+            # 集合をリストに追加（例：3レコードあれば、3つの集合がリストに入る）
+            if current_scan_macs:
+                device_scan_sets[sensor_id].append(current_scan_macs)
+                
         except Exception as e:
             print(f"JSONパースエラー ({sensor_id}): {e}")
             
-    # ③ 各デバイスの特徴量を計算 (18個 x 5台 = 90個)
+    # ③ 各デバイスの特徴量を計算 (18個 x 5台 = 90個) と ④ 全デバイス統合の計算
     all_devices_total_count = 0
     all_devices_unique_macs = set()
     active_devices_count = 0
     
     for device_name in RASPI_DEVICES:
-        observations = device_observations[device_name]
+        # --- 各デバイス18個の特徴量計算 ---
+        flat_observations = device_observations[device_name]
+        if len(flat_observations) > 0:
+            device_feats = calculate_single_device_features(flat_observations, prefix=device_name)
+            features.update(device_feats)
+        else:
+            pass
+
+        scan_sets = device_scan_sets[device_name]
         
-        if len(observations) > 0:
+        if len(scan_sets) > 0:
             active_devices_count += 1
-            all_devices_total_count += len(observations)
-            macs = [obs.get('mac_address', obs.get('mac', '')) for obs in observations]
-            all_devices_unique_macs.update(macs)
             
-        # デバイスごとの18個の特徴量を計算して統合
-        device_feats = calculate_single_device_features(observations, prefix=device_name)
-        features.update(device_feats)
-        
-    # ④ 全デバイス統合特徴量 (4個)
+            # 最初のレコードの集合をベースにする
+            common_macs = scan_sets[0]
+            
+            # 2つ目以降のレコードの集合と順次「積集合(&)」をとっていく
+            for s in scan_sets[1:]:
+                common_macs = common_macs & s
+            
+            # 3回(すべてのレコード)に共通して存在したMACアドレスの数を加算（重複許容）
+            all_devices_total_count += len(common_macs)
+            
+            # 念のため、ユニークMACアドレス（和集合）もこの厳選されたデータで更新する
+            all_devices_unique_macs.update(common_macs)
+            
+    # ④ 全デバイス統合特徴量の登録
     features['all_total_count'] = all_devices_total_count
     features['all_unique_count'] = len(all_devices_unique_macs)
     features['all_unique_ratio'] = len(all_devices_unique_macs) / all_devices_total_count if all_devices_total_count > 0 else 0
