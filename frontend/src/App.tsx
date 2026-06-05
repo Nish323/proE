@@ -21,7 +21,7 @@ function App() {
 
   const fetchData = () => {
     axios
-      .get<PredictionData>("http://localhost:8888/prediction")
+      .get<PredictionData>("http://133.71.3.132:8888/prediction")
       .then((res) => {
         setData(res.data);
         setError(null);

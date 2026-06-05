@@ -8,7 +8,7 @@ from typing import Dict, Any, Tuple
 
 app = Flask(__name__)
 
-CORS(app, resources={r"/*": {"origins": ["http://localhost:3000"]}})
+CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "http://172.21.0.2:3000", "http://133.71.3.132:3000"]}})
 
 
 # -----------------------------------------------
