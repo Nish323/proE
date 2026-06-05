@@ -50,22 +50,27 @@ def fetch_latest_ble_data(cursor, limit=3):
     cursor.execute(query, (limit,))
     return cursor.fetchall()
 
-def save_prediction(connection, cursor, wait_time_min):
+def save_prediction(connection, cursor, wait_time_min, weather_category):
     """
-    推論結果（待ち時間）をpredictionsテーブルに保存する
+    推論結果（待ち時間）と天気情報をpredictionsテーブルに保存する
     """
-    # window_start, window_end を削除し、残りの3項目だけを保存する
+    # AIの数字(0,1,2)を、DB保存用の日本語の文字に変換
+    weather_map = {0: "晴れ", 1: "曇り", 2: "雨・その他"}
+    weather_text = weather_map.get(weather_category, "不明")
+
+    # weatherカラムを追加
     query = """
         INSERT INTO predictions 
-        (prediction_waittime_min, predicted_at, model_version)
-        VALUES (%s, %s, %s)
+        (prediction_waittime_min, predicted_at, model_version, weather)
+        VALUES (%s, %s, %s, %s)
     """
     predicted_at = datetime.now()
     
     try:
-        cursor.execute(query, (wait_time_min, predicted_at, MODEL_VERSION))
+        # パラメータに weather_text を追加
+        cursor.execute(query, (wait_time_min, predicted_at, MODEL_VERSION, weather_text))
         connection.commit()  # 変更を確定させる
-        print(f"[{predicted_at.strftime('%H:%M:%S')}] 予測完了: {wait_time_min:.1f}分 (最新データに基づく推論)")
+        print(f"[{predicted_at.strftime('%H:%M:%S')}] 予測完了: {wait_time_min:.1f}分 (天気: {weather_text})")
     except mysql.connector.Error as err:
         print(f"予測結果の保存に失敗しました: {err}")
         connection.rollback()  # エラーが起きたら元に戻す

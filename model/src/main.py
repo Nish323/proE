@@ -29,7 +29,7 @@ def run_inference_cycle(predictor):
         
         # 3. 天気情報の取得
         weather_info = get_current_weather()
-        
+        # 👇 【追加】取得した天気データの中身をターミナルに表示
         if ble_records:
             # 4. 110次元の特徴量を計算
             features_dict = calculate_all_features(ble_records, weather_info, now)
@@ -38,7 +38,7 @@ def run_inference_cycle(predictor):
             predicted_time = predictor.predict(features_dict)
             
             # 6. 予測結果をDBに保存（windowの時間は渡さない）
-            save_prediction(connection, cursor, predicted_time)
+            save_prediction(connection, cursor, predicted_time, weather_info['weather_category'])
         else:
             print(f"[{now.strftime('%H:%M:%S')}] DBにBLEデータがありません。スキップします。")
 
