@@ -55,7 +55,7 @@ function App() {
           <p style={{ color: "red" }}>{error}</p>
         ) : data ? (
           <div className="box-container">
-            <Box value={data.prediction.toFixed(1)} unit="分" label="ただいまの予測待ち時間" />
+            <Box value={Math.round(data.prediction / 60)} unit="分" label="ただいまの予測待ち時間" />
             <Box value={data.weather} label="天気" />
             <Footer timestamp={data.timestamp} />
           </div>
