@@ -10,6 +10,7 @@ services:
       - /app/node_modules
     environment:
       - CHOKIDAR_USEPOLLING=true
+      - TZ=Asia/Tokyo
     depends_on:
       - backend
 
@@ -22,6 +23,8 @@ services:
       - shared_data:/app/shared
     ports:
       - "8888:80"
+    environment:
+      - TZ=Asia/Tokyo
     networks:
       - db_model
 
@@ -31,6 +34,8 @@ services:
       dockerfile: Dockerfile
     volumes:
       - shared_data:/app/shared
+    environment:
+      - TZ=Asia/Tokyo
     tty: true
     depends_on:
       - mysql
@@ -46,6 +51,7 @@ services:
       MYSQL_DATABASE: ble_db
       MYSQL_USER: project-e
       MYSQL_PASSWORD: project-e
+      TZ: Asia/Tokyo
     ports:
       - "3307:3306"
     volumes:
